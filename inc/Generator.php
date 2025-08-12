@@ -12,6 +12,9 @@ class Generator {
      * Schedule generation
      */
     public static function queue( $product_id, $fabric_name, $texture_id, $angles ) {
+        $logger  = wc_get_logger();
+        $context = [ 'source' => 'wc-fabric-mockups' ];
+        $logger->info( sprintf( 'Queueing generation for product %d fabric "%s"', $product_id, $fabric_name ), $context );
         as_enqueue_async_action( self::ACTION, [
             'product_id'  => $product_id,
             'fabric_name' => $fabric_name,
@@ -29,6 +32,10 @@ class Generator {
         $texture_id  = $args['texture_id'];
         $angles      = $args['angles'];
 
+        $logger  = wc_get_logger();
+        $context = [ 'source' => 'wc-fabric-mockups' ];
+        $logger->info( sprintf( 'Starting generation task for product %d fabric "%s"', $product_id, $fabric_name ), $context );
+
         $api_key = get_option( 'wcfm_api_key' );
         $master_id = get_option( 'wcfm_master_image' );
         $mask_id = get_option( 'wcfm_mask_image' );
@@ -41,10 +48,13 @@ class Generator {
         $image_ids = [];
 
         foreach ( $angles as $angle ) {
+            $logger->info( 'Generating angle ' . $angle, $context );
             $data = $adapter->generate( $texture_path, $angle );
             if ( ! $data ) {
+                $logger->error( 'Failed to generate angle ' . $angle, $context );
                 continue;
             }
+            $logger->info( 'Image generated for angle ' . $angle, $context );
 
             $upload_dir = wp_upload_dir();
             $filename   = 'mockup-' . sanitize_title( $fabric_name . '-' . $angle ) . '.png';
@@ -62,10 +72,15 @@ class Generator {
             $metadata = wp_generate_attachment_metadata( $attach_id, $filepath );
             wp_update_attachment_metadata( $attach_id, $metadata );
             $image_ids[] = $attach_id;
+            $logger->info( 'Stored attachment ' . $attach_id . ' for angle ' . $angle, $context );
         }
 
         if ( $image_ids ) {
+            $logger->info( 'Creating variation with generated images', $context );
             Woo::create_variation( $product_id, $fabric_name, $image_ids );
+            $logger->info( 'Generation completed for product ' . $product_id . ' fabric "' . $fabric_name . '"', $context );
+        } else {
+            $logger->error( 'No images generated for product ' . $product_id . ' fabric "' . $fabric_name . '"', $context );
         }
     }
 }

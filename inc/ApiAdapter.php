@@ -33,6 +33,10 @@ class ApiAdapter {
 
         $payload = self::build_multipart( $body, $files, $boundary );
 
+        $logger  = wc_get_logger();
+        $context = [ 'source' => 'wc-fabric-mockups' ];
+        $logger->info( 'Calling OpenAI API for angle ' . $angle, $context );
+
         $response = wp_remote_post( 'https://api.openai.com/v1/images/edits', [
             'headers' => $headers,
             'body'    => $payload,
@@ -40,13 +44,16 @@ class ApiAdapter {
         ] );
 
         if ( is_wp_error( $response ) ) {
+            $logger->error( 'OpenAI API error for angle ' . $angle . ': ' . $response->get_error_message(), $context );
             return false;
         }
 
         $data = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( empty( $data['data'][0]['b64_json'] ) ) {
+            $logger->error( 'OpenAI API returned no image data for angle ' . $angle, $context );
             return false;
         }
+        $logger->info( 'Received image data for angle ' . $angle, $context );
         return base64_decode( $data['data'][0]['b64_json'] );
     }
 

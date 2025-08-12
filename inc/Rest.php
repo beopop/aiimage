@@ -29,6 +29,11 @@ class Rest {
 
         $angles = $all ? [ 'front', 'front-left', 'left', 'back', 'right', 'front-right' ] : [ 'front' ];
 
+        $logger  = wc_get_logger();
+        $context = [ 'source' => 'wc-fabric-mockups' ];
+        $logger->info( sprintf( 'Generation requested for product %d with fabric "%s" (texture %d)', $product_id, $fabric_name, $texture_id ), $context );
+        $logger->info( 'Angles queued: ' . implode( ', ', $angles ), $context );
+
         Generator::queue( $product_id, $fabric_name, $texture_id, $angles );
 
         return [ 'scheduled' => true ];
