@@ -14,6 +14,9 @@ jQuery(function($){
         frame.on('select', function(){
             var attachment = frame.state().get('selection').first().toJSON();
             $('#wcfm_texture_id').val( attachment.id );
+            $('#wcfm_texture_status').show();
+            var preview = '<img src="' + (attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url) + '" style="max-width:100%;height:auto;" />';
+            $('#wcfm_texture_preview').html( preview );
         });
         frame.open();
     });
@@ -29,6 +32,7 @@ jQuery(function($){
         var btn = $(this).prop('disabled', true);
         fetch(WCFM.rest_url, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'X-WP-Nonce': WCFM.nonce
@@ -40,6 +44,9 @@ jQuery(function($){
                 all_angles: allAngles ? 1 : 0
             })
         }).then(function(resp){
+            if ( ! resp.ok ) {
+                return resp.json().then(function(err){ throw err; });
+            }
             return resp.json();
         }).then(function(){
             alert('Generation scheduled.');
