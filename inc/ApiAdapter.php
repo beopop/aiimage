@@ -15,6 +15,7 @@ class ApiAdapter {
     public function generate( $texture_path, $angle ) {
         $prompt = sprintf( 'High-end studio photo of the same dining chair model, angle: %s, replace upholstery with fabric from the reference texture image, seamless light gray background with soft shadows.', $angle );
         $body   = [
+            'model'  => 'gpt-image-1',
             'prompt' => $prompt,
             'size'   => '1024x1024',
         ];
@@ -33,9 +34,7 @@ class ApiAdapter {
 
         $payload = self::build_multipart( $body, $files, $boundary );
 
-        $logger  = wc_get_logger();
-        $context = [ 'source' => 'wc-fabric-mockups' ];
-        $logger->info( 'Calling OpenAI API for angle ' . $angle, $context );
+        Logger::info( 'Calling OpenAI API for angle ' . $angle );
 
         $response = wp_remote_post( 'https://api.openai.com/v1/images/edits', [
             'headers' => $headers,
@@ -44,16 +43,16 @@ class ApiAdapter {
         ] );
 
         if ( is_wp_error( $response ) ) {
-            $logger->error( 'OpenAI API error for angle ' . $angle . ': ' . $response->get_error_message(), $context );
+            Logger::error( 'OpenAI API error for angle ' . $angle . ': ' . $response->get_error_message() );
             return false;
         }
 
         $data = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( empty( $data['data'][0]['b64_json'] ) ) {
-            $logger->error( 'OpenAI API returned no image data for angle ' . $angle, $context );
+            Logger::error( 'OpenAI API returned no image data for angle ' . $angle );
             return false;
         }
-        $logger->info( 'Received image data for angle ' . $angle, $context );
+        Logger::info( 'Received image data for angle ' . $angle );
         return base64_decode( $data['data'][0]['b64_json'] );
     }
 
@@ -67,9 +66,13 @@ class ApiAdapter {
         foreach ( $files as $name => $path ) {
             $filename = basename( $path );
             $contents = file_get_contents( $path );
+            $mime     = mime_content_type( $path );
+            if ( ! $mime ) {
+                $mime = 'application/octet-stream';
+            }
             $data .= "--{$boundary}{$eol}";
             $data .= "Content-Disposition: form-data; name=\"{$name}\"; filename=\"{$filename}\"{$eol}";
-            $data .= "Content-Type: image/png{$eol}{$eol}";
+            $data .= "Content-Type: {$mime}{$eol}{$eol}";
             $data .= $contents . $eol;
         }
         $data .= "--{$boundary}--{$eol}";

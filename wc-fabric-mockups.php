@@ -21,6 +21,7 @@ require_once WCFM_PLUGIN_DIR . 'inc/Generator.php';
 require_once WCFM_PLUGIN_DIR . 'inc/Woo.php';
 require_once WCFM_PLUGIN_DIR . 'inc/Rest.php';
 require_once WCFM_PLUGIN_DIR . 'inc/ApiAdapter.php';
+require_once WCFM_PLUGIN_DIR . 'inc/Logger.php';
 
 /**
  * Bootstrap the plugin

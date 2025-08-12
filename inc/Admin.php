@@ -64,6 +64,10 @@ class Admin {
         register_setting( 'wcfm-settings', 'wcfm_api_key', [ 'sanitize_callback' => 'sanitize_text_field' ] );
         register_setting( 'wcfm-settings', 'wcfm_master_image', [ 'sanitize_callback' => 'absint' ] );
         register_setting( 'wcfm-settings', 'wcfm_mask_image', [ 'sanitize_callback' => 'absint' ] );
+        if ( false === get_option( 'wcfm_enable_logging', false ) ) {
+            add_option( 'wcfm_enable_logging', 0, '', 'no' );
+        }
+        register_setting( 'wcfm-settings', 'wcfm_enable_logging', [ 'sanitize_callback' => 'absint', 'default' => 0 ] );
     }
 
     public static function render_settings() {
@@ -93,6 +97,13 @@ class Admin {
                             <?php $mask = get_option( 'wcfm_mask_image' ); ?>
                             <input type="number" name="wcfm_mask_image" id="wcfm_mask_image" value="<?php echo esc_attr( $mask ); ?>" />
                             <p class="description"><?php _e( 'Attachment ID of PNG mask with transparent upholstery.', 'wcfm' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="wcfm_enable_logging"><?php _e( 'Enable logging', 'wcfm' ); ?></label></th>
+                        <td>
+                            <input type="checkbox" name="wcfm_enable_logging" id="wcfm_enable_logging" value="1" <?php checked( get_option( 'wcfm_enable_logging' ), 1 ); ?> />
+                            <p class="description"><?php _e( 'Log plugin activity to WooCommerce logs.', 'wcfm' ); ?></p>
                         </td>
                     </tr>
                 </table>

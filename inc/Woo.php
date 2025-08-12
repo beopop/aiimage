@@ -30,9 +30,7 @@ class Woo {
         }
         $variation->save();
 
-        $logger  = wc_get_logger();
-        $context = [ 'source' => 'wc-fabric-mockups' ];
-        $logger->info( sprintf( 'Variation created for product %d fabric "%s"', $product_id, $fabric_name ), $context );
+        Logger::info( sprintf( 'Variation created for product %d fabric "%s"', $product_id, $fabric_name ) );
     }
 
     protected static function ensure_attribute( WC_Product_Variable $product, $fabric_name ) {
