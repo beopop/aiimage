@@ -97,7 +97,9 @@
                 method: 'POST',
                 url: CTS.rest.root + '/process',
                 beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); },
-                data: data
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                processData: false
             }).done(function(response){
                 renderRows(response.items || []);
                 if (response.job_id){
