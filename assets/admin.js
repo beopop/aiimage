@@ -51,8 +51,9 @@ jQuery(function($){
         }).then(function(){
             alert('Generation scheduled.');
             btn.prop('disabled', false);
-        }).catch(function(){
-            alert('Error scheduling generation');
+        }).catch(function(err){
+            var msg = (err && err.message) ? err.message : 'Error scheduling generation';
+            alert(msg);
             btn.prop('disabled', false);
         });
     });
