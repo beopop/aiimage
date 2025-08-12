@@ -27,6 +27,7 @@ class CTS_OpenAI_Client {
             'timeout' => $this->timeout,
             'headers' => array(
                 'Authorization' => 'Bearer ' . $this->api_key,
+                'Content-Type'  => 'multipart/form-data',
             ),
             'body'    => $params,
         );
