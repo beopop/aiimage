@@ -60,6 +60,8 @@
                 var resultCell = $('<td>');
                 if (item.result_url){
                     resultCell.append($('<img>').attr('src', item.result_url));
+                } else if (item.message){
+                    resultCell.text(item.message);
                 }
                 row.append(resultCell);
                 tbody.append(row);
@@ -105,8 +107,17 @@
                 if (response.job_id){
                     pollStatus(response.job_id);
                 }
-            }).fail(function(){
-                alert('Error starting job');
+            }).fail(function(xhr, textStatus, errorThrown){
+                var message = 'Error starting job';
+                if (xhr.responseJSON && xhr.responseJSON.message){
+                    message += ': ' + xhr.responseJSON.message;
+                } else if (xhr.responseText){
+                    message += ': ' + xhr.responseText;
+                } else if (errorThrown){
+                    message += ': ' + errorThrown;
+                }
+                alert(message);
+                console.error('CTS process error', xhr);
             });
         });
     });
