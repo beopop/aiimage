@@ -29,6 +29,10 @@ class Woo {
             $variation->set_gallery_image_ids( array_slice( $image_ids, 1 ) );
         }
         $variation->save();
+
+        $logger  = wc_get_logger();
+        $context = [ 'source' => 'wc-fabric-mockups' ];
+        $logger->info( sprintf( 'Variation created for product %d fabric "%s"', $product_id, $fabric_name ), $context );
     }
 
     protected static function ensure_attribute( WC_Product_Variable $product, $fabric_name ) {
