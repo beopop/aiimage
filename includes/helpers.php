@@ -9,7 +9,13 @@ function cts_save_image_to_media_library( $binary, $base_id, $texture_id, $job_i
     $filename   = sanitize_file_name( $base_name . '-texture-swap-' . current_time( 'Ymd-His' ) . '.png' );
     $filepath   = trailingslashit( $upload_dir['path'] ) . $filename;
 
-    file_put_contents( $filepath, $binary );
+    if ( ! wp_mkdir_p( $upload_dir['path'] ) ) {
+        return new WP_Error( 'cts_upload_dir', __( 'Upload directory not writable', 'chair-texture-swap' ) );
+    }
+
+    if ( false === file_put_contents( $filepath, $binary ) ) {
+        return new WP_Error( 'cts_write_failed', __( 'Could not write file', 'chair-texture-swap' ) );
+    }
 
     $filetype = wp_check_filetype( $filename, null );
 

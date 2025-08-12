@@ -43,7 +43,13 @@ class CTS_REST {
         $base_ids = array_map( 'intval', (array) ( $params['base_image_ids'] ?? array() ) );
         $texture_id = isset( $params['texture_image_id'] ) ? intval( $params['texture_image_id'] ) : 0;
         $areas = isset( $params['areas'] ) ? array_map( 'sanitize_text_field', (array) $params['areas'] ) : array();
-        $size = sanitize_text_field( $params['size'] ?? '1024' );
+
+        $allowed_sizes = array( 256, 512, 768, 1024 );
+        $size          = isset( $params['size'] ) ? intval( $params['size'] ) : 1024;
+        if ( ! in_array( $size, $allowed_sizes, true ) ) {
+            $size = 1024;
+        }
+
         $prompt = sanitize_textarea_field( $params['prompt_overrides'] ?? '' );
         $job_id = uniqid( 'cts_', true );
 
