@@ -51,9 +51,21 @@ class CTS_Processor {
             'size'   => $size . 'x' . $size,
         );
 
-        $images   = array( curl_file_create( $base_path ) );
+        $base_mime = get_post_mime_type( $base_id );
+        if ( ! $base_mime ) {
+            $base_mime = mime_content_type( $base_path );
+        }
+
+        $images = array(
+            curl_file_create( $base_path, $base_mime, basename( $base_path ) ),
+        );
+
         if ( $texture_path && file_exists( $texture_path ) ) {
-            $images[] = curl_file_create( $texture_path );
+            $texture_mime = get_post_mime_type( $texture_id );
+            if ( ! $texture_mime ) {
+                $texture_mime = mime_content_type( $texture_path );
+            }
+            $images[] = curl_file_create( $texture_path, $texture_mime, basename( $texture_path ) );
         }
 
         foreach ( $images as $index => $file ) {
