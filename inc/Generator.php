@@ -13,12 +13,33 @@ class Generator {
      */
     public static function queue( $product_id, $fabric_name, $texture_id, $angles ) {
         Logger::info( sprintf( 'Queueing generation for product %d fabric "%s"', $product_id, $fabric_name ) );
-        as_enqueue_async_action( self::ACTION, [
+
+        if ( ! function_exists( 'as_enqueue_async_action' ) ) {
+            $message = 'Action Scheduler not available.';
+            Logger::error( $message );
+            return new \WP_Error( 'wcfm_no_scheduler', $message );
+        }
+
+        $result = as_enqueue_async_action( self::ACTION, [
             'product_id'  => $product_id,
             'fabric_name' => $fabric_name,
             'texture_id'  => $texture_id,
             'angles'      => $angles,
         ] );
+
+        if ( is_wp_error( $result ) ) {
+            Logger::error( 'Error scheduling generation: ' . $result->get_error_message() );
+            return $result;
+        }
+
+        if ( ! $result ) {
+            $message = 'Unknown error scheduling generation.';
+            Logger::error( $message );
+            return new \WP_Error( 'wcfm_schedule_failed', $message );
+        }
+
+        Logger::info( 'Generation scheduled with action ID ' . $result );
+        return $result;
     }
 
     /**

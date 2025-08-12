@@ -31,8 +31,10 @@ class Rest {
 
         Logger::info( sprintf( 'Generation requested for product %d with fabric "%s" (texture %d)', $product_id, $fabric_name, $texture_id ) );
         Logger::info( 'Angles queued: ' . implode( ', ', $angles ) );
-
-        Generator::queue( $product_id, $fabric_name, $texture_id, $angles );
+        $result = Generator::queue( $product_id, $fabric_name, $texture_id, $angles );
+        if ( is_wp_error( $result ) ) {
+            return new \WP_Error( 'wcfm_schedule', __( 'Failed to schedule generation: ', 'wcfm' ) . $result->get_error_message(), [ 'status' => 500 ] );
+        }
 
         return [ 'scheduled' => true ];
     }
