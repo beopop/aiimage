@@ -71,34 +71,65 @@
 
         $('#cts-process-form').on('submit', function(e){
             e.preventDefault();
-            var data = {
-                base_image_ids: $(this).data('base') || [],
-                texture_image_id: $(this).data('texture') || 0,
-                areas: $('input[name="areas[]"]:checked').map(function(){ return $(this).val(); }).get(),
-                size: $('#cts-size').val(),
-                prompt_overrides: $('#cts-prompt').val()
-            };
-            $.ajax({
-                method: 'POST',
-                url: apiRoot + '/process',
-                beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); },
-                data: JSON.stringify(data),
-                contentType: 'application/json',
-                processData: false
-            }).done(function(response){
-                renderRows(response.items || []);
-            }).fail(function(xhr, textStatus, errorThrown){
-                var message = 'Error starting job';
-                if (xhr.responseJSON && xhr.responseJSON.message){
-                    message += ': ' + xhr.responseJSON.message;
-                } else if (xhr.responseText){
-                    message += ': ' + xhr.responseText;
-                } else if (errorThrown){
-                    message += ': ' + errorThrown;
-                }
-                alert(message);
-                console.error('CTS process error', xhr);
+
+            var baseIds = $(this).data('base') || [];
+            var textureId = $(this).data('texture') || 0;
+            var areas = $('input[name="areas[]"]:checked').map(function(){ return $(this).val(); }).get();
+            var size = $('#cts-size').val();
+            var prompt = $('#cts-prompt').val();
+
+            var items = baseIds.map(function(id){
+                return { id: id, status: 'queued' };
             });
+            renderRows(items);
+
+            function processNext(index){
+                if (index >= baseIds.length){
+                    return;
+                }
+
+                items[index].status = 'processing';
+                renderRows(items);
+
+                var data = {
+                    base_image_ids: [ baseIds[index] ],
+                    texture_image_id: textureId,
+                    areas: areas,
+                    size: size,
+                    prompt_overrides: prompt
+                };
+
+                $.ajax({
+                    method: 'POST',
+                    url: apiRoot + '/process',
+                    beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); },
+                    data: JSON.stringify(data),
+                    contentType: 'application/json',
+                    processData: false
+                }).done(function(response){
+                    if (response.items && response.items[0]){
+                        items[index] = response.items[0];
+                    } else {
+                        items[index].status = 'error';
+                        items[index].message = 'No response';
+                    }
+                    renderRows(items);
+                    processNext(index + 1);
+                }).fail(function(xhr, textStatus, errorThrown){
+                    items[index].status = 'error';
+                    if (xhr.responseJSON && xhr.responseJSON.message){
+                        items[index].message = xhr.responseJSON.message;
+                    } else if (xhr.responseText){
+                        items[index].message = xhr.responseText;
+                    } else if (errorThrown){
+                        items[index].message = errorThrown;
+                    }
+                    renderRows(items);
+                    processNext(index + 1);
+                });
+            }
+
+            processNext(0);
         });
     });
 })(jQuery);
