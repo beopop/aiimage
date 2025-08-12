@@ -45,6 +45,45 @@
             textureFrame.open();
         });
 
+        function renderRows(items){
+            var tbody = $('#cts-status-table tbody').empty();
+            items.forEach(function(item){
+                var row = $('<tr>');
+                var imgCell = $('<td>');
+                if (item.base_url){
+                    imgCell.append($('<img>').attr('src', item.base_url));
+                } else {
+                    imgCell.text(item.id);
+                }
+                row.append(imgCell);
+                row.append($('<td>').text(item.status));
+                var resultCell = $('<td>');
+                if (item.result_url){
+                    resultCell.append($('<img>').attr('src', item.result_url));
+                }
+                row.append(resultCell);
+                tbody.append(row);
+            });
+        }
+
+        function pollStatus(jobId){
+            var interval = setInterval(function(){
+                $.ajax({
+                    method: 'GET',
+                    url: CTS.rest.root + '/status/' + jobId,
+                    beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); }
+                }).done(function(res){
+                    var items = res.items || [];
+                    renderRows(items);
+                    var allDone = items.every(function(i){ return i.status !== 'queued' && i.status !== 'processing'; });
+                    if (allDone){
+                        clearInterval(interval);
+                        alert('Processing complete');
+                    }
+                });
+            }, 2000);
+        }
+
         $('#cts-process-form').on('submit', function(e){
             e.preventDefault();
             var data = {
@@ -60,7 +99,12 @@
                 beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); },
                 data: data
             }).done(function(response){
-                console.log(response);
+                renderRows(response.items || []);
+                if (response.job_id){
+                    pollStatus(response.job_id);
+                }
+            }).fail(function(){
+                alert('Error starting job');
             });
         });
     });

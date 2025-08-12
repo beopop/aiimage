@@ -48,18 +48,21 @@ class CTS_REST {
         $job_id = uniqid( 'cts_', true );
 
         $this->logger->info( 'Job created', array( 'context' => $job_id ) );
-        $this->processor->process_job( $base_ids, $texture_id, $areas, $size, $prompt );
+        $items = $this->processor->process_job( $base_ids, $texture_id, $areas, $size, $prompt );
+        set_transient( 'cts_job_' . $job_id, $items, HOUR_IN_SECONDS );
 
-        return rest_ensure_response( array( 'job_id' => $job_id ) );
+        return rest_ensure_response( array( 'job_id' => $job_id, 'items' => $items ) );
     }
 
     public function status( WP_REST_Request $request ) {
         $job_id = sanitize_text_field( $request['job_id'] );
-        return rest_ensure_response( array( 'job_id' => $job_id, 'items' => array() ) );
+        $items  = get_transient( 'cts_job_' . $job_id );
+        return rest_ensure_response( array( 'job_id' => $job_id, 'items' => $items ? $items : array() ) );
     }
 
     public function cancel( WP_REST_Request $request ) {
         $job_id = sanitize_text_field( $request['job_id'] );
+        delete_transient( 'cts_job_' . $job_id );
         $this->logger->warn( 'Job canceled', array( 'context' => $job_id ) );
         return rest_ensure_response( array( 'job_id' => $job_id, 'canceled' => true ) );
     }
