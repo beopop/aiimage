@@ -11,7 +11,11 @@ class CTS_OpenAI_Client {
     public function __construct() {
         $this->api_key = get_option( 'cts_api_key', '' );
         $this->model   = get_option( 'cts_model', 'gpt-image-1' );
-        $this->timeout = (int) get_option( 'cts_timeout', 30 );
+        // Ensure a sane minimum timeout so large image requests have
+        // enough time to complete. Users may override this value via the
+        // settings screen, but we never allow less than 60 seconds.
+        $option_timeout = (int) get_option( 'cts_timeout', 60 );
+        $this->timeout  = max( 60, $option_timeout );
     }
 
     /**
@@ -71,7 +75,17 @@ class CTS_OpenAI_Client {
             'body'    => $body,
         );
 
-        return wp_remote_post( $endpoint, $args );
+        $response = wp_remote_post( $endpoint, $args );
+
+        // Some hosts are slow to contact the OpenAI API which can trigger
+        // a cURL 28 timeout. In that case we retry once with a longer
+        // timeout to give the request a better chance to succeed.
+        if ( is_wp_error( $response ) && false !== strpos( $response->get_error_message(), 'cURL error 28' ) ) {
+            $args['timeout'] = $this->timeout * 2;
+            $response        = wp_remote_post( $endpoint, $args );
+        }
+
+        return $response;
     }
 }
 
