@@ -58,8 +58,6 @@ class Admin {
             add_option( 'wcfm_api_key', '', '', 'no' );
         }
         register_setting( 'wcfm-settings', 'wcfm_api_key', [ 'sanitize_callback' => 'sanitize_text_field' ] );
-        register_setting( 'wcfm-settings', 'wcfm_master_image', [ 'sanitize_callback' => 'absint' ] );
-        register_setting( 'wcfm-settings', 'wcfm_mask_image', [ 'sanitize_callback' => 'absint' ] );
         if ( false === get_option( 'wcfm_enable_logging', false ) ) {
             add_option( 'wcfm_enable_logging', 0, '', 'no' );
         }
@@ -78,22 +76,6 @@ class Admin {
                     <tr>
                         <th scope="row"><label for="wcfm_api_key"><?php _e( 'OpenAI API Key', 'wcfm' ); ?></label></th>
                         <td><input type="text" name="wcfm_api_key" id="wcfm_api_key" value="<?php echo esc_attr( get_option( 'wcfm_api_key' ) ); ?>" class="regular-text" /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="wcfm_master_image"><?php _e( 'Master chair image', 'wcfm' ); ?></label></th>
-                        <td>
-                            <?php $master = get_option( 'wcfm_master_image' ); ?>
-                            <input type="number" name="wcfm_master_image" id="wcfm_master_image" value="<?php echo esc_attr( $master ); ?>" />
-                            <p class="description"><?php _e( 'Attachment ID of the base chair image.', 'wcfm' ); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="wcfm_mask_image"><?php _e( 'Mask image', 'wcfm' ); ?></label></th>
-                        <td>
-                            <?php $mask = get_option( 'wcfm_mask_image' ); ?>
-                            <input type="number" name="wcfm_mask_image" id="wcfm_mask_image" value="<?php echo esc_attr( $mask ); ?>" />
-                            <p class="description"><?php _e( 'Attachment ID of PNG mask with transparent upholstery.', 'wcfm' ); ?></p>
-                        </td>
                     </tr>
                     <tr>
                         <th scope="row"><label for="wcfm_enable_logging"><?php _e( 'Enable logging', 'wcfm' ); ?></label></th>

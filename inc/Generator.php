@@ -48,9 +48,7 @@ class Generator {
         $texture_id = $args['texture_id'];
         Logger::info( sprintf( 'Starting generation task for product %d', $product_id ) );
 
-        $api_key   = get_option( 'wcfm_api_key' );
-        $mask_id   = get_option( 'wcfm_mask_image' );
-        $mask_path = get_attached_file( $mask_id );
+        $api_key      = get_option( 'wcfm_api_key' );
         $texture_path = get_attached_file( $texture_id );
 
         $product = wc_get_product( $product_id );
@@ -68,8 +66,8 @@ class Generator {
                 Logger::error( 'Missing file for attachment ' . $orig_id );
                 continue;
             }
-            $adapter = new ApiAdapter( $api_key, $master_path, $mask_path );
-            $data = $adapter->generate( $texture_path );
+            $adapter = new ApiAdapter( $api_key );
+            $data    = $adapter->generate( $master_path, $texture_path );
             if ( ! $data ) {
                 Logger::error( 'Failed to generate image for attachment ' . $orig_id );
                 continue;
