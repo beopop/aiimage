@@ -1,0 +1,6 @@
+#cts-base-images, #cts-texture-image {
+    border: 1px dashed #ccc;
+    padding: 10px;
+    min-height: 100px;
+    margin-bottom: 10px;
+}
