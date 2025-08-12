@@ -5,7 +5,7 @@ class Generator {
     const ACTION = 'wcfm_generate_task';
 
     public static function init() {
-        add_action( self::ACTION, [ __CLASS__, 'process' ], 10, 1 );
+        add_action( self::ACTION, [ __CLASS__, 'process' ], 10, 2 );
     }
 
     /**
@@ -43,9 +43,7 @@ class Generator {
     /**
      * Process scheduled action
      */
-    public static function process( $args ) {
-        $product_id = $args['product_id'];
-        $texture_id = $args['texture_id'];
+    public static function process( $product_id, $texture_id ) {
         Logger::info( sprintf( 'Starting generation task for product %d', $product_id ) );
 
         $api_key      = get_option( 'wcfm_api_key' );
