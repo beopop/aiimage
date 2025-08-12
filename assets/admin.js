@@ -1,6 +1,7 @@
 (function($){
     $(function(){
         var baseFrame, textureFrame;
+        const apiRoot = CTS.rest.root.replace(/\/$/, '');
 
         $('#cts-select-base').on('click', function(e){
             e.preventDefault();
@@ -68,24 +69,6 @@
             });
         }
 
-        function pollStatus(jobId){
-            var interval = setInterval(function(){
-                $.ajax({
-                    method: 'GET',
-                    url: CTS.rest.root + '/status/' + jobId,
-                    beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); }
-                }).done(function(res){
-                    var items = res.items || [];
-                    renderRows(items);
-                    var allDone = items.every(function(i){ return i.status !== 'queued' && i.status !== 'processing'; });
-                    if (allDone){
-                        clearInterval(interval);
-                        alert('Processing complete');
-                    }
-                });
-            }, 2000);
-        }
-
         $('#cts-process-form').on('submit', function(e){
             e.preventDefault();
             var data = {
@@ -97,16 +80,13 @@
             };
             $.ajax({
                 method: 'POST',
-                url: CTS.rest.root + '/process',
+                url: apiRoot + '/process',
                 beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); },
                 data: JSON.stringify(data),
                 contentType: 'application/json',
                 processData: false
             }).done(function(response){
                 renderRows(response.items || []);
-                if (response.job_id){
-                    pollStatus(response.job_id);
-                }
             }).fail(function(xhr, textStatus, errorThrown){
                 var message = 'Error starting job';
                 if (xhr.responseJSON && xhr.responseJSON.message){

@@ -34,12 +34,31 @@ class CTS_Processor {
         }
 
         $prompt = $prompt_overrides ? $prompt_overrides : __( 'Replace chair upholstery texture', 'chair-texture-swap' );
+        if ( ! empty( $areas ) ) {
+            $prompt .= ' (' . implode( ', ', array_map( 'sanitize_text_field', $areas ) ) . ')';
+        }
+
+        $allowed_sizes = array( 256, 512, 768, 1024 );
+        $size          = (int) $size;
+        if ( ! in_array( $size, $allowed_sizes, true ) ) {
+            $size = 1024;
+        }
+
+        $texture_path = get_attached_file( $texture_id );
 
         $params = array(
-            'image'  => curl_file_create( $base_path ),
             'prompt' => $prompt,
             'size'   => $size . 'x' . $size,
         );
+
+        $images   = array( curl_file_create( $base_path ) );
+        if ( $texture_path && file_exists( $texture_path ) ) {
+            $images[] = curl_file_create( $texture_path );
+        }
+
+        foreach ( $images as $index => $file ) {
+            $params[ 'image[' . $index . ']' ] = $file;
+        }
 
         $response = $this->client->image_edit( $params );
 
@@ -79,6 +98,16 @@ class CTS_Processor {
 
         $binary    = base64_decode( $data['data'][0]['b64_json'] );
         $result_id = cts_save_image_to_media_library( $binary, $base_id, $texture_id, uniqid( 'cts_', true ) );
+
+        if ( is_wp_error( $result_id ) ) {
+            $message = $result_id->get_error_message();
+            $this->logger->error( 'Saving image failed', array( 'context' => $base_id, 'message' => $message ) );
+            return array(
+                'status'  => 'error',
+                'id'      => $base_id,
+                'message' => $message,
+            );
+        }
 
         return array(
             'status'     => 'done',
