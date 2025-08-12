@@ -3,16 +3,12 @@ namespace WC_Fabric_Mockups;
 
 class ApiAdapter {
     protected $api_key;
-    protected $master_image;
-    protected $mask_image;
 
-    public function __construct( $api_key, $master_image, $mask_image ) {
-        $this->api_key      = $api_key;
-        $this->master_image = $master_image;
-        $this->mask_image   = $mask_image;
+    public function __construct( $api_key ) {
+        $this->api_key = $api_key;
     }
 
-    public function generate( $texture_path ) {
+    public function generate( $master_image, $texture_path ) {
         $prompt = 'High-end studio photo of the same dining chair model, replace upholstery with fabric from the reference texture image, seamless light gray background with soft shadows.';
         $body   = [
             'model'  => 'gpt-image-1',
@@ -27,15 +23,14 @@ class ApiAdapter {
         ];
 
         $files = [
-            'image'       => $this->master_image,
-            'mask'        => $this->mask_image,
-            'image[]'     => $texture_path,
+            'image'   => $master_image,
+            'image[]' => $texture_path,
         ];
 
         $payload = self::build_multipart( $body, $files, $boundary );
         Logger::info( 'Calling OpenAI API' );
         Logger::info( 'OpenAI request payload: ' . wp_json_encode( $body ) );
-        Logger::info( 'OpenAI request images: master=' . basename( $this->master_image ) . ', mask=' . basename( $this->mask_image ) . ', texture=' . basename( $texture_path ) );
+        Logger::info( 'OpenAI request images: master=' . basename( $master_image ) . ', texture=' . basename( $texture_path ) );
 
         $response = wp_remote_post( 'https://api.openai.com/v1/images/edits', [
             'headers' => $headers,
