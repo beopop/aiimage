@@ -34,6 +34,7 @@ class Woo {
     }
 
     protected static function ensure_attribute( WC_Product_Variable $product, $fabric_name ) {
+        Logger::info( 'Ensuring attribute for product ' . $product->get_id() );
         $attributes = $product->get_attributes();
         if ( ! isset( $attributes[ self::ATTRIBUTE_SLUG ] ) ) {
             $taxonomy = wc_sanitize_taxonomy_name( self::ATTRIBUTE_SLUG );
@@ -64,5 +65,6 @@ class Woo {
         if ( $term && ! in_array( $term->term_id, $terms, true ) ) {
             wp_set_object_terms( $product->get_id(), $term->term_id, self::ATTRIBUTE_SLUG, true );
         }
+        Logger::info( 'Attribute ensured for product ' . $product->get_id() );
     }
 }
