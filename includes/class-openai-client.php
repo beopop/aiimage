@@ -23,11 +23,14 @@ class CTS_OpenAI_Client {
         }
 
         $endpoint = 'https://api.openai.com/v1/images/edits';
+
+        // Ensure the required model parameter is always sent.
+        $params['model'] = $this->model;
+
         $args = array(
             'timeout' => $this->timeout,
             'headers' => array(
                 'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type'  => 'multipart/form-data',
             ),
             'body'    => $params,
         );
