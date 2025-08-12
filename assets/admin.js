@@ -7,8 +7,19 @@
             if (!baseFrame) {
                 baseFrame = wp.media({ multiple: true });
                 baseFrame.on('select', function(){
-                    var ids = baseFrame.state().get('selection').map(function(att){ return att.id; });
+                    var selection = baseFrame.state().get('selection');
+                    var ids = selection.map(function(att){ return att.id; });
                     $('#cts-process-form').data('base', ids);
+
+                    var container = $('#cts-base-images').empty();
+                    selection.each(function(att){
+                        var url = att.get('url');
+                        var sizes = att.get('sizes');
+                        if (sizes && sizes.thumbnail) {
+                            url = sizes.thumbnail.url;
+                        }
+                        $('<img>').attr('src', url).appendTo(container);
+                    });
                 });
             }
             baseFrame.open();
@@ -19,8 +30,16 @@
             if (!textureFrame) {
                 textureFrame = wp.media({ multiple: false });
                 textureFrame.on('select', function(){
-                    var id = textureFrame.state().get('selection').first().id;
+                    var attachment = textureFrame.state().get('selection').first();
+                    var id = attachment.id;
                     $('#cts-process-form').data('texture', id);
+
+                    var url = attachment.get('url');
+                    var sizes = attachment.get('sizes');
+                    if (sizes && sizes.thumbnail) {
+                        url = sizes.thumbnail.url;
+                    }
+                    $('#cts-texture-image').empty().append($('<img>').attr('src', url));
                 });
             }
             textureFrame.open();

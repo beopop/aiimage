@@ -4,3 +4,9 @@
     min-height: 100px;
     margin-bottom: 10px;
 }
+
+.cts-dropzone img {
+    max-width: 100px;
+    height: auto;
+    margin: 5px;
+}
