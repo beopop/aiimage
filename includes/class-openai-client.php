@@ -15,6 +15,13 @@ class CTS_OpenAI_Client {
     }
 
     public function image_edit( $params ) {
+        if ( empty( $this->api_key ) ) {
+            return new WP_Error(
+                'cts_missing_api_key',
+                __( 'OpenAI API key is not set', 'chair-texture-swap' )
+            );
+        }
+
         $endpoint = 'https://api.openai.com/v1/images/edits';
         $args = array(
             'timeout' => $this->timeout,
