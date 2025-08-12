@@ -18,20 +18,15 @@ class Rest {
 
     public static function handle_generate( $request ) {
         $nonce = $request->get_header( 'X-WP-Nonce' );
-        if ( ! wp_verify_nonce( $nonce, 'wcfm_generate' ) ) {
+        if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
             return new \WP_Error( 'wcfm_nonce', __( 'Invalid nonce', 'wcfm' ), [ 'status' => 403 ] );
         }
 
-        $product_id  = intval( $request['product_id'] );
-        $fabric_name = sanitize_text_field( $request['fabric_name'] );
-        $texture_id  = intval( $request['texture_id'] );
-        $all         = ! empty( $request['all_angles'] );
+        $product_id = intval( $request['product_id'] );
+        $texture_id = intval( $request['texture_id'] );
 
-        $angles = $all ? [ 'front', 'front-left', 'left', 'back', 'right', 'front-right' ] : [ 'front' ];
-
-        Logger::info( sprintf( 'Generation requested for product %d with fabric "%s" (texture %d)', $product_id, $fabric_name, $texture_id ) );
-        Logger::info( 'Angles queued: ' . implode( ', ', $angles ) );
-        $result = Generator::queue( $product_id, $fabric_name, $texture_id, $angles );
+        Logger::info( sprintf( 'Generation requested for product %d (texture %d)', $product_id, $texture_id ) );
+        $result = Generator::queue( $product_id, $texture_id );
         if ( is_wp_error( $result ) ) {
             return new \WP_Error( 'wcfm_schedule', __( 'Failed to schedule generation: ', 'wcfm' ) . $result->get_error_message(), [ 'status' => 500 ] );
         }
