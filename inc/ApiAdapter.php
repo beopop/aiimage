@@ -8,7 +8,7 @@ class ApiAdapter {
         $this->api_key = $api_key;
     }
 
-    public function generate( $master_image, $texture_path ) {
+    public function generate( $master_image, $mask_path = null ) {
         $prompt = 'High-end studio photo of the same dining chair model, replace upholstery with fabric from the reference texture image, seamless light gray background with soft shadows.';
         $body   = [
             'model'  => 'gpt-image-1',
@@ -23,14 +23,20 @@ class ApiAdapter {
         ];
 
         $files = [
-            'image'   => $master_image,
-            'image[]' => $texture_path,
+            'image[]' => $master_image,
         ];
+        if ( $mask_path ) {
+            $files['mask'] = $mask_path;
+        }
 
         $payload = self::build_multipart( $body, $files, $boundary );
         Logger::info( 'Calling OpenAI API' );
         Logger::info( 'OpenAI request payload: ' . wp_json_encode( $body ) );
-        Logger::info( 'OpenAI request images: master=' . basename( $master_image ) . ', texture=' . basename( $texture_path ) );
+        $log_msg = 'OpenAI request images: master=' . basename( $master_image );
+        if ( $mask_path ) {
+            $log_msg .= ', mask=' . basename( $mask_path );
+        }
+        Logger::info( $log_msg );
 
         $response = wp_remote_post( 'https://api.openai.com/v1/images/edits', [
             'headers' => $headers,
