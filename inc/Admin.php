@@ -54,6 +54,7 @@ class Admin {
 
     public static function settings_menu() {
         add_options_page( 'Fabric Mockups', 'Fabric Mockups', 'manage_options', 'wcfm-settings', [ __CLASS__, 'render_settings' ] );
+        add_options_page( 'Fabric Mockups Logs', 'Fabric Mockups Logs', 'manage_options', 'wcfm-logs', [ __CLASS__, 'render_logs' ] );
     }
 
     public static function register_settings() {
@@ -109,6 +110,39 @@ class Admin {
                 </table>
                 <?php submit_button(); ?>
             </form>
+            <p><a href="<?php echo esc_url( admin_url( 'options-general.php?page=wcfm-logs' ) ); ?>"><?php _e( 'View logs', 'wcfm' ); ?></a></p>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render debug log page.
+     */
+    public static function render_logs() {
+        if ( isset( $_POST['wcfm_clear_logs'] ) && check_admin_referer( 'wcfm_clear_logs' ) ) {
+            Logger::clear();
+            echo '<div class="updated"><p>' . esc_html__( 'Logs cleared.', 'wcfm' ) . '</p></div>';
+        }
+
+        $logs = Logger::get_logs();
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e( 'Fabric Mockups Logs', 'wcfm' ); ?></h1>
+            <form method="post">
+                <?php wp_nonce_field( 'wcfm_clear_logs' ); ?>
+                <?php submit_button( __( 'Clear Logs', 'wcfm' ), 'secondary', 'wcfm_clear_logs', false ); ?>
+            </form>
+            <pre style="background:#fff;border:1px solid #ccc;padding:10px;max-height:500px;overflow:auto;">
+<?php
+if ( $logs ) {
+    foreach ( $logs as $entry ) {
+        echo esc_html( sprintf( '[%s] %s: %s', $entry['time'], strtoupper( $entry['level'] ), $entry['message'] ) ) . "\n";
+    }
+} else {
+    esc_html_e( 'No log entries found.', 'wcfm' );
+}
+?>
+            </pre>
         </div>
         <?php
     }

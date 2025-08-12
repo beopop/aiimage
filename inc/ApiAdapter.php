@@ -33,14 +33,22 @@ class ApiAdapter {
         ];
 
         $payload = self::build_multipart( $body, $files, $boundary );
-
         Logger::info( 'Calling OpenAI API for angle ' . $angle );
+        Logger::info( 'OpenAI request payload: ' . wp_json_encode( $body ) );
+        Logger::info( 'OpenAI request images: master=' . basename( $this->master_image ) . ', mask=' . basename( $this->mask_image ) . ', texture=' . basename( $texture_path ) );
 
         $response = wp_remote_post( 'https://api.openai.com/v1/images/edits', [
             'headers' => $headers,
             'body'    => $payload,
             'timeout' => 60,
         ] );
+
+        if ( ! is_wp_error( $response ) ) {
+            $code    = wp_remote_retrieve_response_code( $response );
+            $body_snippet = substr( wp_remote_retrieve_body( $response ), 0, 200 );
+            Logger::info( 'OpenAI response code for angle ' . $angle . ': ' . $code );
+            Logger::info( 'OpenAI response body for angle ' . $angle . ': ' . $body_snippet );
+        }
 
         if ( is_wp_error( $response ) ) {
             Logger::error( 'OpenAI API error for angle ' . $angle . ': ' . $response->get_error_message() );
