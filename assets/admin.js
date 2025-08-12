@@ -1,56 +1,48 @@
-jQuery(function($){
-    var frame;
-    $('#wcfm_upload_texture').on('click', function(e){
-        e.preventDefault();
-        if ( frame ) {
-            frame.open();
-            return;
-        }
-        frame = wp.media({
-            title: 'Select fabric texture',
-            button: { text: 'Use this texture' },
-            library: { type: 'image' }
-        });
-        frame.on('select', function(){
-            var attachment = frame.state().get('selection').first().toJSON();
-            $('#wcfm_texture_id').val( attachment.id );
-            $('#wcfm_texture_status').show();
-            var preview = '<img src="' + (attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url) + '" style="max-width:100%;height:auto;" />';
-            $('#wcfm_texture_preview').html( preview );
-        });
-        frame.open();
-    });
+(function($){
+    $(function(){
+        var baseFrame, textureFrame;
 
-    $('#wcfm_generate').on('click', function(){
-        var tex = $('#wcfm_texture_id').val();
-        if ( ! tex ) {
-            alert('Please upload texture.');
-            return;
-        }
-        var btn = $(this).prop('disabled', true);
-        fetch(WCFM.rest_url, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-WP-Nonce': WCFM.nonce
-            },
-            body: JSON.stringify({
-                product_id: WCFM.product_id,
-                texture_id: tex
-            })
-        }).then(function(resp){
-            if ( ! resp.ok ) {
-                return resp.json().then(function(err){ throw err; });
+        $('#cts-select-base').on('click', function(e){
+            e.preventDefault();
+            if (!baseFrame) {
+                baseFrame = wp.media({ multiple: true });
+                baseFrame.on('select', function(){
+                    var ids = baseFrame.state().get('selection').map(function(att){ return att.id; });
+                    $('#cts-process-form').data('base', ids);
+                });
             }
-            return resp.json();
-        }).then(function(){
-            alert('Generation scheduled.');
-            btn.prop('disabled', false);
-        }).catch(function(err){
-            var msg = (err && err.message) ? err.message : 'Error scheduling generation';
-            alert(msg);
-            btn.prop('disabled', false);
+            baseFrame.open();
+        });
+
+        $('#cts-select-texture').on('click', function(e){
+            e.preventDefault();
+            if (!textureFrame) {
+                textureFrame = wp.media({ multiple: false });
+                textureFrame.on('select', function(){
+                    var id = textureFrame.state().get('selection').first().id;
+                    $('#cts-process-form').data('texture', id);
+                });
+            }
+            textureFrame.open();
+        });
+
+        $('#cts-process-form').on('submit', function(e){
+            e.preventDefault();
+            var data = {
+                base_image_ids: $(this).data('base') || [],
+                texture_image_id: $(this).data('texture') || 0,
+                areas: $('input[name="areas[]"]:checked').map(function(){ return $(this).val(); }).get(),
+                size: $('#cts-size').val(),
+                prompt_overrides: $('#cts-prompt').val()
+            };
+            $.ajax({
+                method: 'POST',
+                url: CTS.rest.root + '/process',
+                beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); },
+                data: data
+            }).done(function(response){
+                console.log(response);
+            });
         });
     });
-});
+})(jQuery);
