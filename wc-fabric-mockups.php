@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Fabric Mockups
  * Description: Generate chair fabric mockup images using OpenAI DALL·E and create WooCommerce variations.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: ChatGPT
  */
 
