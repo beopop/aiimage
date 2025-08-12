@@ -33,38 +33,59 @@ class CTS_Processor {
             );
         }
 
-        $upload_dir   = wp_upload_dir();
-        $mime         = get_post_mime_type( $base_id );
-        $new_filename = wp_unique_filename( $upload_dir['path'], 'cts-' . basename( $base_path ) );
-        $new_path     = trailingslashit( $upload_dir['path'] ) . $new_filename;
+        $prompt = $prompt_overrides ? $prompt_overrides : __( 'Replace chair upholstery texture', 'chair-texture-swap' );
 
-        if ( ! copy( $base_path, $new_path ) ) {
-            $this->logger->error( 'Failed to copy image', array( 'context' => $base_id ) );
+        $params = array(
+            'image'  => curl_file_create( $base_path ),
+            'prompt' => $prompt,
+            'size'   => $size . 'x' . $size,
+        );
+
+        $response = $this->client->image_edit( $params );
+
+        if ( is_wp_error( $response ) ) {
+            $message = $response->get_error_message();
+            $this->logger->error( 'API request failed', array( 'context' => $base_id, 'message' => $message ) );
             return array(
                 'status'  => 'error',
                 'id'      => $base_id,
-                'message' => __( 'Could not create result image', 'chair-texture-swap' ),
+                'message' => $message,
             );
         }
 
-        $attachment = array(
-            'post_mime_type' => $mime,
-            'post_title'     => sanitize_text_field( 'CTS result ' . $base_id ),
-            'post_content'   => '',
-            'post_status'    => 'inherit',
-        );
+        $code = wp_remote_retrieve_response_code( $response );
+        $body = wp_remote_retrieve_body( $response );
 
-        $attach_id = wp_insert_attachment( $attachment, $new_path );
-        require_once ABSPATH . 'wp-admin/includes/image.php';
-        $attach_data = wp_generate_attachment_metadata( $attach_id, $new_path );
-        wp_update_attachment_metadata( $attach_id, $attach_data );
+        if ( 200 !== $code ) {
+            $data    = json_decode( $body, true );
+            $message = isset( $data['error']['message'] ) ? $data['error']['message'] : __( 'OpenAI request failed', 'chair-texture-swap' );
+            $this->logger->error( 'API error', array( 'context' => $base_id, 'message' => $message ) );
+            return array(
+                'status'  => 'error',
+                'id'      => $base_id,
+                'message' => $message,
+            );
+        }
+
+        $data = json_decode( $body, true );
+        if ( empty( $data['data'][0]['b64_json'] ) ) {
+            $this->logger->error( 'No image data returned', array( 'context' => $base_id ) );
+            return array(
+                'status'  => 'error',
+                'id'      => $base_id,
+                'message' => __( 'No image data returned', 'chair-texture-swap' ),
+            );
+        }
+
+        $binary    = base64_decode( $data['data'][0]['b64_json'] );
+        $result_id = cts_save_image_to_media_library( $binary, $base_id, $texture_id, uniqid( 'cts_', true ) );
 
         return array(
             'status'     => 'done',
             'id'         => $base_id,
             'base_url'   => wp_get_attachment_image_url( $base_id, 'thumbnail' ),
-            'result_id'  => $attach_id,
-            'result_url' => wp_get_attachment_image_url( $attach_id, 'thumbnail' ),
+            'result_id'  => $result_id,
+            'result_url' => wp_get_attachment_image_url( $result_id, 'thumbnail' ),
         );
     }
 }
