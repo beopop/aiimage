@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: WooCommerce Fabric Mockups
- * Description: Generate chair fabric mockup images using OpenAI DALL·E and create WooCommerce variations.
+ * Description: Generate chair fabric mockup images using OpenAI DALL·E and replace product images.
  * Version: 1.0.1
  * Author: ChatGPT
  */
@@ -18,7 +18,6 @@ define( 'WCFM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 // Include required files
 require_once WCFM_PLUGIN_DIR . 'inc/Admin.php';
 require_once WCFM_PLUGIN_DIR . 'inc/Generator.php';
-require_once WCFM_PLUGIN_DIR . 'inc/Woo.php';
 require_once WCFM_PLUGIN_DIR . 'inc/Rest.php';
 require_once WCFM_PLUGIN_DIR . 'inc/ApiAdapter.php';
 require_once WCFM_PLUGIN_DIR . 'inc/Logger.php';
@@ -27,7 +26,6 @@ require_once WCFM_PLUGIN_DIR . 'inc/Logger.php';
  * Bootstrap the plugin
  */
 function wcfm_init() {
-    \WC_Fabric_Mockups\Woo::init();
     \WC_Fabric_Mockups\Generator::init();
     \WC_Fabric_Mockups\Rest::init();
 

@@ -22,11 +22,9 @@ jQuery(function($){
     });
 
     $('#wcfm_generate').on('click', function(){
-        var fabric = $('#wcfm_fabric_name').val();
         var tex = $('#wcfm_texture_id').val();
-        var allAngles = $('#wcfm_all_angles').is(':checked');
-        if ( ! fabric || ! tex ) {
-            alert('Please provide fabric name and upload texture.');
+        if ( ! tex ) {
+            alert('Please upload texture.');
             return;
         }
         var btn = $(this).prop('disabled', true);
@@ -39,9 +37,7 @@ jQuery(function($){
             },
             body: JSON.stringify({
                 product_id: WCFM.product_id,
-                fabric_name: fabric,
-                texture_id: tex,
-                all_angles: allAngles ? 1 : 0
+                texture_id: tex
             })
         }).then(function(resp){
             if ( ! resp.ok ) {

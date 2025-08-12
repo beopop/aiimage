@@ -19,18 +19,11 @@ class Admin {
         wp_nonce_field( 'wcfm_metabox', 'wcfm_nonce' );
         ?>
         <p>
-            <label for="wcfm_fabric_name"><?php _e( 'Fabric name', 'wcfm' ); ?></label>
-            <input type="text" id="wcfm_fabric_name" class="widefat" />
-        </p>
-        <p>
             <label><?php _e( 'Fabric texture', 'wcfm' ); ?></label><br/>
             <input type="hidden" id="wcfm_texture_id" />
             <button type="button" class="button" id="wcfm_upload_texture"><?php _e( 'Upload/Select', 'wcfm' ); ?></button>
             <span id="wcfm_texture_status" class="dashicons dashicons-yes" style="display:none;color:#46b450;margin-left:5px;"></span>
             <div id="wcfm_texture_preview" style="margin-top:10px;"></div>
-        </p>
-        <p>
-            <label><input type="checkbox" id="wcfm_all_angles" checked /> <?php _e( 'Generate all 6 angles', 'wcfm' ); ?></label>
         </p>
         <p>
             <button type="button" class="button button-primary" id="wcfm_generate"><?php _e( 'Generate mockups', 'wcfm' ); ?></button>
@@ -47,8 +40,8 @@ class Admin {
             wp_enqueue_media();
             wp_enqueue_script( 'wcfm-admin', WCFM_PLUGIN_URL . 'assets/admin.js', [ 'jquery' ], '1.0', true );
             wp_localize_script( 'wcfm-admin', 'WCFM', [
-                'nonce'    => wp_create_nonce( 'wcfm_generate' ),
-                'rest_url' => rest_url( 'wc-fabric-mockups/v1/generate' ),
+                'nonce'      => wp_create_nonce( 'wp_rest' ),
+                'rest_url'   => rest_url( 'wc-fabric-mockups/v1/generate' ),
                 'product_id' => get_the_ID(),
             ] );
         }

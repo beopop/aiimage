@@ -11,8 +11,8 @@ class Generator {
     /**
      * Schedule generation
      */
-    public static function queue( $product_id, $fabric_name, $texture_id, $angles ) {
-        Logger::info( sprintf( 'Queueing generation for product %d fabric "%s"', $product_id, $fabric_name ) );
+    public static function queue( $product_id, $texture_id ) {
+        Logger::info( sprintf( 'Queueing generation for product %d', $product_id ) );
 
         if ( ! function_exists( 'as_enqueue_async_action' ) ) {
             $message = 'Action Scheduler not available.';
@@ -21,10 +21,8 @@ class Generator {
         }
 
         $result = as_enqueue_async_action( self::ACTION, [
-            'product_id'  => $product_id,
-            'fabric_name' => $fabric_name,
-            'texture_id'  => $texture_id,
-            'angles'      => $angles,
+            'product_id' => $product_id,
+            'texture_id' => $texture_id,
         ] );
 
         if ( is_wp_error( $result ) ) {
@@ -46,40 +44,45 @@ class Generator {
      * Process scheduled action
      */
     public static function process( $args ) {
-        $product_id  = $args['product_id'];
-        $fabric_name = $args['fabric_name'];
-        $texture_id  = $args['texture_id'];
-        $angles      = $args['angles'];
-        Logger::info( sprintf( 'Starting generation task for product %d fabric "%s"', $product_id, $fabric_name ) );
+        $product_id = $args['product_id'];
+        $texture_id = $args['texture_id'];
+        Logger::info( sprintf( 'Starting generation task for product %d', $product_id ) );
 
-        $api_key = get_option( 'wcfm_api_key' );
-        $master_id = get_option( 'wcfm_master_image' );
-        $mask_id = get_option( 'wcfm_mask_image' );
-
-        $master_path = get_attached_file( $master_id );
-        $mask_path   = get_attached_file( $mask_id );
+        $api_key   = get_option( 'wcfm_api_key' );
+        $mask_id   = get_option( 'wcfm_mask_image' );
+        $mask_path = get_attached_file( $mask_id );
         $texture_path = get_attached_file( $texture_id );
 
-        $adapter = new ApiAdapter( $api_key, $master_path, $mask_path );
-        $image_ids = [];
+        $product = wc_get_product( $product_id );
+        if ( ! $product ) {
+            Logger::error( 'Product not found: ' . $product_id );
+            return;
+        }
 
-        foreach ( $angles as $angle ) {
-            Logger::info( 'Generating angle ' . $angle );
-            $data = $adapter->generate( $texture_path, $angle );
-            if ( ! $data ) {
-                Logger::error( 'Failed to generate angle ' . $angle );
+        $images = array_filter( array_merge( [ $product->get_image_id() ], $product->get_gallery_image_ids() ) );
+        $new_ids = [];
+
+        foreach ( $images as $orig_id ) {
+            $master_path = get_attached_file( $orig_id );
+            if ( ! $master_path ) {
+                Logger::error( 'Missing file for attachment ' . $orig_id );
                 continue;
             }
-            Logger::info( 'Image generated for angle ' . $angle );
+            $adapter = new ApiAdapter( $api_key, $master_path, $mask_path );
+            $data = $adapter->generate( $texture_path );
+            if ( ! $data ) {
+                Logger::error( 'Failed to generate image for attachment ' . $orig_id );
+                continue;
+            }
 
             $upload_dir = wp_upload_dir();
-            $filename   = 'mockup-' . sanitize_title( $fabric_name . '-' . $angle ) . '.png';
+            $filename   = 'mockup-' . $orig_id . '-' . time() . '.png';
             $filepath   = $upload_dir['path'] . '/' . $filename;
             file_put_contents( $filepath, $data );
 
             $attachment = [
                 'post_mime_type' => 'image/png',
-                'post_title'     => $fabric_name . ' ' . $angle,
+                'post_title'     => 'Mockup ' . $orig_id,
                 'post_content'   => '',
                 'post_status'    => 'inherit',
             ];
@@ -87,16 +90,19 @@ class Generator {
             require_once ABSPATH . 'wp-admin/includes/image.php';
             $metadata = wp_generate_attachment_metadata( $attach_id, $filepath );
             wp_update_attachment_metadata( $attach_id, $metadata );
-            $image_ids[] = $attach_id;
-            Logger::info( 'Stored attachment ' . $attach_id . ' for angle ' . $angle );
+            $new_ids[] = $attach_id;
+            Logger::info( 'Stored attachment ' . $attach_id . ' for source ' . $orig_id );
         }
 
-        if ( $image_ids ) {
-            Logger::info( 'Creating variation with generated images' );
-            Woo::create_variation( $product_id, $fabric_name, $image_ids );
-            Logger::info( 'Generation completed for product ' . $product_id . ' fabric "' . $fabric_name . '"' );
+        if ( $new_ids ) {
+            $product->set_image_id( array_shift( $new_ids ) );
+            if ( $new_ids ) {
+                $product->set_gallery_image_ids( $new_ids );
+            }
+            $product->save();
+            Logger::info( 'Images replaced for product ' . $product_id );
         } else {
-            Logger::error( 'No images generated for product ' . $product_id . ' fabric "' . $fabric_name . '"' );
+            Logger::error( 'No images generated for product ' . $product_id );
         }
     }
 }

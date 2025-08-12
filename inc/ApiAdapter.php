@@ -12,8 +12,8 @@ class ApiAdapter {
         $this->mask_image   = $mask_image;
     }
 
-    public function generate( $texture_path, $angle ) {
-        $prompt = sprintf( 'High-end studio photo of the same dining chair model, angle: %s, replace upholstery with fabric from the reference texture image, seamless light gray background with soft shadows.', $angle );
+    public function generate( $texture_path ) {
+        $prompt = 'High-end studio photo of the same dining chair model, replace upholstery with fabric from the reference texture image, seamless light gray background with soft shadows.';
         $body   = [
             'model'  => 'gpt-image-1',
             'prompt' => $prompt,
@@ -33,7 +33,7 @@ class ApiAdapter {
         ];
 
         $payload = self::build_multipart( $body, $files, $boundary );
-        Logger::info( 'Calling OpenAI API for angle ' . $angle );
+        Logger::info( 'Calling OpenAI API' );
         Logger::info( 'OpenAI request payload: ' . wp_json_encode( $body ) );
         Logger::info( 'OpenAI request images: master=' . basename( $this->master_image ) . ', mask=' . basename( $this->mask_image ) . ', texture=' . basename( $texture_path ) );
 
@@ -46,21 +46,21 @@ class ApiAdapter {
         if ( ! is_wp_error( $response ) ) {
             $code    = wp_remote_retrieve_response_code( $response );
             $body_snippet = substr( wp_remote_retrieve_body( $response ), 0, 200 );
-            Logger::info( 'OpenAI response code for angle ' . $angle . ': ' . $code );
-            Logger::info( 'OpenAI response body for angle ' . $angle . ': ' . $body_snippet );
+            Logger::info( 'OpenAI response code: ' . $code );
+            Logger::info( 'OpenAI response body: ' . $body_snippet );
         }
 
         if ( is_wp_error( $response ) ) {
-            Logger::error( 'OpenAI API error for angle ' . $angle . ': ' . $response->get_error_message() );
+            Logger::error( 'OpenAI API error: ' . $response->get_error_message() );
             return false;
         }
 
         $data = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( empty( $data['data'][0]['b64_json'] ) ) {
-            Logger::error( 'OpenAI API returned no image data for angle ' . $angle );
+            Logger::error( 'OpenAI API returned no image data' );
             return false;
         }
-        Logger::info( 'Received image data for angle ' . $angle );
+        Logger::info( 'Received image data' );
         return base64_decode( $data['data'][0]['b64_json'] );
     }
 
