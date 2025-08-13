@@ -38,20 +38,11 @@ class CTS_Processor {
             $prompt .= ' (' . implode( ', ', array_map( 'sanitize_text_field', $areas ) ) . ')';
         }
 
-        if ( 'base' === $size ) {
-            $info = getimagesize( $base_path );
-            if ( $info ) {
-                $size_param = $info[0] . 'x' . $info[1];
-            } else {
-                $size_param = '1024x1024';
-            }
+        $allowed_sizes = array( '1024x1024', '1024x1536', '1536x1024', 'auto' );
+        if ( ! in_array( $size, $allowed_sizes, true ) ) {
+            $size_param = '1024x1024';
         } else {
-            $allowed_sizes = array( 256, 512, 768, 1024 );
-            $size          = (int) $size;
-            if ( ! in_array( $size, $allowed_sizes, true ) ) {
-                $size = 1024;
-            }
-            $size_param = $size . 'x' . $size;
+            $size_param = $size;
         }
 
         $texture_path = get_attached_file( $texture_id );
