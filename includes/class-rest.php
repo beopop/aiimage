@@ -11,7 +11,7 @@ class CTS_REST {
         $this->processor = $processor;
         $this->logger    = $logger;
         add_action( 'rest_api_init', array( $this, 'register_routes' ) );
-        add_action( 'cts_run_job', array( $this, 'run_job' ), 10, 6 );
+        add_action( 'cts_run_job', array( $this, 'run_job' ), 10, 7 );
     }
 
     public function register_routes() {
@@ -51,6 +51,11 @@ class CTS_REST {
             $size = '1024x1024';
         }
 
+        $quality = isset( $params['quality'] ) ? intval( $params['quality'] ) : 10;
+        if ( $quality < 1 || $quality > 10 ) {
+            $quality = 10;
+        }
+
         $prompt = sanitize_textarea_field( $params['prompt_overrides'] ?? '' );
         $job_id = uniqid( 'cts_', true );
 
@@ -65,7 +70,7 @@ class CTS_REST {
         wp_schedule_single_event(
             time(),
             'cts_run_job',
-            array( $job_id, $base_ids, $texture_id, $areas, $size, $prompt )
+            array( $job_id, $base_ids, $texture_id, $areas, $size, $quality, $prompt )
         );
 
         return rest_ensure_response(
@@ -99,9 +104,9 @@ class CTS_REST {
         return rest_ensure_response( array( 'job_id' => $job_id, 'canceled' => true ) );
     }
 
-    public function run_job( $job_id, $base_ids, $texture_id, $areas, $size, $prompt ) {
+    public function run_job( $job_id, $base_ids, $texture_id, $areas, $size, $quality, $prompt ) {
         ignore_user_abort( true );
-        $items = $this->processor->process_job( $base_ids, $texture_id, $areas, $size, $prompt );
+        $items = $this->processor->process_job( $base_ids, $texture_id, $areas, $size, $quality, $prompt );
         set_transient(
             'cts_job_' . $job_id,
             array( 'status' => 'done', 'items' => $items ),

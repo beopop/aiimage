@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-function cts_save_image_to_media_library( $binary, $base_id, $texture_id, $job_id ) {
+function cts_save_image_to_media_library( $binary, $base_id, $texture_id, $job_id, $quality = 10 ) {
     $upload_dir = wp_upload_dir();
     $base_name = pathinfo( get_attached_file( $base_id ), PATHINFO_FILENAME );
     $base_dir  = trailingslashit( $upload_dir['path'] );
@@ -26,14 +26,15 @@ function cts_save_image_to_media_library( $binary, $base_id, $texture_id, $job_i
         return new WP_Error( 'cts_write_failed', __( 'Could not write file', 'chair-texture-swap' ) );
     }
 
-    $max_size = 250 * 1024; // 250 KB in bytes.
+    $quality     = max( 1, min( 10, intval( $quality ) ) );
+    $max_size    = $quality * 100 * 1024; // Rough target size in bytes.
     if ( filesize( $filepath ) > $max_size ) {
         $editor = wp_get_image_editor( $filepath );
         if ( ! is_wp_error( $editor ) ) {
-            $quality        = 90;
+            $jpg_quality    = 90;
             $compressed_path = preg_replace( '/\.png$/i', '.jpg', $filepath );
             do {
-                $editor->set_quality( $quality );
+                $editor->set_quality( $jpg_quality );
                 $result = $editor->save( $compressed_path, 'image/jpeg' );
                 if ( ! is_wp_error( $result ) && file_exists( $result['path'] ) && filesize( $result['path'] ) <= $max_size ) {
                     @unlink( $filepath );
@@ -41,8 +42,8 @@ function cts_save_image_to_media_library( $binary, $base_id, $texture_id, $job_i
                     $filename = basename( $compressed_path );
                     break;
                 }
-                $quality -= 10;
-            } while ( $quality >= 10 );
+                $jpg_quality -= 10;
+            } while ( $jpg_quality >= 10 );
 
             if ( file_exists( $compressed_path ) && $filepath !== $compressed_path ) {
                 @unlink( $filepath );

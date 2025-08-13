@@ -12,15 +12,15 @@ class CTS_Processor {
         $this->logger = $logger;
     }
 
-    public function process_job( $base_ids, $texture_id, $areas, $size, $prompt_overrides ) {
+    public function process_job( $base_ids, $texture_id, $areas, $size, $quality, $prompt_overrides ) {
         $results = array();
         foreach ( $base_ids as $base_id ) {
-            $results[] = $this->process_single_image( $base_id, $texture_id, $areas, $size, $prompt_overrides );
+            $results[] = $this->process_single_image( $base_id, $texture_id, $areas, $size, $quality, $prompt_overrides );
         }
         return $results;
     }
 
-    public function process_single_image( $base_id, $texture_id, $areas, $size, $prompt_overrides ) {
+    public function process_single_image( $base_id, $texture_id, $areas, $size, $quality, $prompt_overrides ) {
         $this->logger->info( 'Processing image', array( 'context' => $base_id ) );
 
         $base_path = get_attached_file( $base_id );
@@ -111,7 +111,7 @@ class CTS_Processor {
         }
 
         $binary    = base64_decode( $data['data'][0]['b64_json'] );
-        $result_id = cts_save_image_to_media_library( $binary, $base_id, $texture_id, uniqid( 'cts_', true ) );
+        $result_id = cts_save_image_to_media_library( $binary, $base_id, $texture_id, uniqid( 'cts_', true ), $quality );
 
         if ( is_wp_error( $result_id ) ) {
             $message = $result_id->get_error_message();
