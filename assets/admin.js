@@ -3,6 +3,14 @@
         var baseFrame, textureFrame;
         const apiRoot = CTS.rest.root.replace(/\/$/, '');
 
+        function updateEstimate(){
+            var q = parseInt($('#cts-quality').val(), 10) || 0;
+            var est = q * 100;
+            $('#cts-quality-estimate').text(est ? est + ' KB' : '');
+        }
+        $('#cts-quality').on('change', updateEstimate);
+        updateEstimate();
+
         $('#cts-select-base').on('click', function(e){
             e.preventDefault();
             if (!baseFrame) {
@@ -77,6 +85,7 @@
             var areas = $('input[name="areas[]"]:checked').map(function(){ return $(this).val(); }).get();
             var size = $('#cts-size').val();
             var prompt = $('#cts-prompt').val();
+            var quality = $('#cts-quality').val();
 
             var items = baseIds.map(function(id){
                 return { id: id, status: 'queued' };
@@ -96,7 +105,8 @@
                     texture_image_id: textureId,
                     areas: areas,
                     size: size,
-                    prompt_overrides: prompt
+                    prompt_overrides: prompt,
+                    quality: quality
                 };
 
                 function pollJob(jobId, index){

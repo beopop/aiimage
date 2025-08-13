@@ -28,6 +28,15 @@
             </select>
         </p>
         <p>
+            <label for="cts-quality"><?php _e( 'Output Quality', 'chair-texture-swap' ); ?></label>
+            <select id="cts-quality" name="quality">
+                <?php for ( $i = 1; $i <= 10; $i++ ) : ?>
+                    <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+                <?php endfor; ?>
+            </select>
+            <span id="cts-quality-estimate"></span>
+        </p>
+        <p>
             <label for="cts-prompt"><?php _e( 'AI Prompt', 'chair-texture-swap' ); ?></label><br>
             <textarea id="cts-prompt" name="prompt_overrides" rows="4" cols="50"><?php echo esc_textarea( __( "Replace only the chair’s fabric upholstery with the provided texture reference.\nKeep frame, legs, lighting, shadows, composition and perspective unchanged.\nPreserve seams, stitch lines, realistic fabric behavior, and scale of the pattern.\nNo other edits besides the fabric swap.\nDo not alter, add, or remove any text or letters present in the image.", 'chair-texture-swap' ) ); ?></textarea>
         </p>
