@@ -101,7 +101,7 @@
 
                 function pollJob(jobId, index){
                     $.ajax({
-                        method: 'GET',
+                        type: 'GET',
                         url: apiRoot + '/status/' + jobId,
                         beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); }
                     }).done(function(resp){
@@ -132,7 +132,7 @@
                 }
 
                 $.ajax({
-                    method: 'POST',
+                    type: 'POST',
                     url: apiRoot + '/process',
                     beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); },
                     data: JSON.stringify(data),
