@@ -24,6 +24,7 @@
                 <option value="1024">1024</option>
                 <option value="768">768</option>
                 <option value="512">512</option>
+                <option value="base"><?php _e( 'Base image size', 'chair-texture-swap' ); ?></option>
             </select>
         </p>
         <p>
