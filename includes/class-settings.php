@@ -29,7 +29,7 @@ class CTS_Settings {
     }
 
     public function field_timeout() {
-        echo '<input type="number" name="cts_timeout" value="' . esc_attr( get_option( 'cts_timeout', 60 ) ) . '" class="small-text" />';
+        echo '<input type="number" name="cts_timeout" min="60" value="' . esc_attr( get_option( 'cts_timeout', 300 ) ) . '" class="small-text" />';
     }
 }
 
