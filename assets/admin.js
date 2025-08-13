@@ -99,6 +99,38 @@
                     prompt_overrides: prompt
                 };
 
+                function pollJob(jobId, index){
+                    $.ajax({
+                        method: 'GET',
+                        url: apiRoot + '/status/' + jobId,
+                        beforeSend: function(xhr){ xhr.setRequestHeader('X-WP-Nonce', CTS.rest.nonce); }
+                    }).done(function(resp){
+                        if (resp.status === 'done'){
+                            if (resp.items && resp.items[0]){
+                                items[index] = resp.items[0];
+                            } else {
+                                items[index].status = 'error';
+                                items[index].message = 'No response';
+                            }
+                            renderRows(items);
+                            processNext(index + 1);
+                        } else {
+                            setTimeout(function(){ pollJob(jobId, index); }, 2000);
+                        }
+                    }).fail(function(xhr, textStatus, errorThrown){
+                        items[index].status = 'error';
+                        if (xhr.responseJSON && xhr.responseJSON.message){
+                            items[index].message = xhr.responseJSON.message;
+                        } else if (xhr.responseText){
+                            items[index].message = xhr.responseText;
+                        } else if (errorThrown){
+                            items[index].message = errorThrown;
+                        }
+                        renderRows(items);
+                        processNext(index + 1);
+                    });
+                }
+
                 $.ajax({
                     method: 'POST',
                     url: apiRoot + '/process',
@@ -107,14 +139,18 @@
                     contentType: 'application/json',
                     processData: false
                 }).done(function(response){
-                    if (response.items && response.items[0]){
+                    if (response.job_id){
+                        pollJob(response.job_id, index);
+                    } else if (response.items && response.items[0]){
                         items[index] = response.items[0];
+                        renderRows(items);
+                        processNext(index + 1);
                     } else {
                         items[index].status = 'error';
                         items[index].message = 'No response';
+                        renderRows(items);
+                        processNext(index + 1);
                     }
-                    renderRows(items);
-                    processNext(index + 1);
                 }).fail(function(xhr, textStatus, errorThrown){
                     items[index].status = 'error';
                     if (xhr.responseJSON && xhr.responseJSON.message){
