@@ -21,13 +21,13 @@ class CTS_REST {
             'permission_callback' => array( $this, 'permissions_check' ),
         ) );
 
-        register_rest_route( 'chair-texture-swap/v1', '/status/(?P<job_id>[a-zA-Z0-9-]+)', array(
+        register_rest_route( 'chair-texture-swap/v1', '/status/(?P<job_id>[a-zA-Z0-9_.-]+)', array(
             'methods'  => 'GET',
             'callback' => array( $this, 'status' ),
             'permission_callback' => array( $this, 'permissions_check' ),
         ) );
 
-        register_rest_route( 'chair-texture-swap/v1', '/cancel/(?P<job_id>[a-zA-Z0-9-]+)', array(
+        register_rest_route( 'chair-texture-swap/v1', '/cancel/(?P<job_id>[a-zA-Z0-9_.-]+)', array(
             'methods'  => 'POST',
             'callback' => array( $this, 'cancel' ),
             'permission_callback' => array( $this, 'permissions_check' ),
