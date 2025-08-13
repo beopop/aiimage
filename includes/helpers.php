@@ -17,6 +17,31 @@ function cts_save_image_to_media_library( $binary, $base_id, $texture_id, $job_i
         return new WP_Error( 'cts_write_failed', __( 'Could not write file', 'chair-texture-swap' ) );
     }
 
+    $max_size = 250 * 1024; // 250 KB in bytes.
+    if ( filesize( $filepath ) > $max_size ) {
+        $editor = wp_get_image_editor( $filepath );
+        if ( ! is_wp_error( $editor ) ) {
+            $quality        = 90;
+            $compressed_path = preg_replace( '/\.png$/i', '.jpg', $filepath );
+            do {
+                $editor->set_quality( $quality );
+                $result = $editor->save( $compressed_path, 'image/jpeg' );
+                if ( ! is_wp_error( $result ) && file_exists( $result['path'] ) && filesize( $result['path'] ) <= $max_size ) {
+                    @unlink( $filepath );
+                    $filepath = $result['path'];
+                    $filename = basename( $compressed_path );
+                    break;
+                }
+                $quality -= 10;
+            } while ( $quality >= 10 );
+
+            if ( file_exists( $compressed_path ) && $filepath !== $compressed_path ) {
+                @unlink( $filepath );
+                $filepath = $compressed_path;
+                $filename = basename( $compressed_path );
+            }
+        }
+    }
     $filetype = wp_check_filetype( $filename, null );
 
     $attachment = array(
