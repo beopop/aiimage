@@ -11,6 +11,7 @@ class CTS_REST {
         $this->processor = $processor;
         $this->logger    = $logger;
         add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+        add_action( 'cts_run_job', array( $this, 'run_job' ), 10, 6 );
     }
 
     public function register_routes() {
@@ -54,16 +55,41 @@ class CTS_REST {
         $job_id = uniqid( 'cts_', true );
 
         $this->logger->info( 'Job created', array( 'context' => $job_id ) );
-        $items = $this->processor->process_job( $base_ids, $texture_id, $areas, $size, $prompt );
-        set_transient( 'cts_job_' . $job_id, $items, HOUR_IN_SECONDS );
 
-        return rest_ensure_response( array( 'job_id' => $job_id, 'items' => $items ) );
+        set_transient(
+            'cts_job_' . $job_id,
+            array( 'status' => 'pending', 'items' => array() ),
+            HOUR_IN_SECONDS
+        );
+
+        wp_schedule_single_event(
+            time(),
+            'cts_run_job',
+            array( $job_id, $base_ids, $texture_id, $areas, $size, $prompt )
+        );
+
+        return rest_ensure_response(
+            array(
+                'job_id' => $job_id,
+                'status' => 'pending',
+                'items'  => array(),
+            )
+        );
     }
 
     public function status( WP_REST_Request $request ) {
         $job_id = sanitize_text_field( $request['job_id'] );
-        $items  = get_transient( 'cts_job_' . $job_id );
-        return rest_ensure_response( array( 'job_id' => $job_id, 'items' => $items ? $items : array() ) );
+        $data   = get_transient( 'cts_job_' . $job_id );
+        if ( ! $data ) {
+            $data = array( 'status' => 'pending', 'items' => array() );
+        }
+        return rest_ensure_response(
+            array(
+                'job_id' => $job_id,
+                'status' => $data['status'],
+                'items'  => $data['items'],
+            )
+        );
     }
 
     public function cancel( WP_REST_Request $request ) {
@@ -71,6 +97,16 @@ class CTS_REST {
         delete_transient( 'cts_job_' . $job_id );
         $this->logger->warn( 'Job canceled', array( 'context' => $job_id ) );
         return rest_ensure_response( array( 'job_id' => $job_id, 'canceled' => true ) );
+    }
+
+    public function run_job( $job_id, $base_ids, $texture_id, $areas, $size, $prompt ) {
+        ignore_user_abort( true );
+        $items = $this->processor->process_job( $base_ids, $texture_id, $areas, $size, $prompt );
+        set_transient(
+            'cts_job_' . $job_id,
+            array( 'status' => 'done', 'items' => $items ),
+            HOUR_IN_SECONDS
+        );
     }
 }
 

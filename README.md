@@ -5,3 +5,7 @@ WordPress plugin that batches chair upholstery texture swaps using the OpenAI im
 ### Timeout handling
 
 The plugin now uses a 300 second default timeout for requests to the OpenAI API and retries once with a longer timeout if the initial request fails with a `cURL error 28`. The PHP execution time limit is increased as well so large image jobs have adequate time to finish. You can adjust the timeout value from the plugin settings page.
+
+### Background processing
+
+Image jobs are processed asynchronously using WP-Cron. The REST endpoint quickly returns a job ID while processing continues in the background, so tasks can finish even if the browser leaves the page.
