@@ -37,6 +37,7 @@ class CTS_Processor {
         if ( ! empty( $areas ) ) {
             $prompt .= ' (' . implode( ', ', array_map( 'sanitize_text_field', $areas ) ) . ')';
         }
+        $prompt .= ' ' . __( 'Do not alter or modify any existing text or letters in the image.', 'chair-texture-swap' );
 
         $allowed_sizes = array( '1024x1024', '1024x1536', '1536x1024', 'auto' );
         if ( ! in_array( $size, $allowed_sizes, true ) ) {
