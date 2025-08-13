@@ -14,7 +14,7 @@ class CTS_OpenAI_Client {
         // Ensure a sane minimum timeout so large image requests have
         // enough time to complete. Users may override this value via the
         // settings screen, but we never allow less than 60 seconds.
-        $option_timeout = (int) get_option( 'cts_timeout', 60 );
+        $option_timeout = (int) get_option( 'cts_timeout', 300 );
         $this->timeout  = max( 60, $option_timeout );
     }
 
@@ -65,6 +65,11 @@ class CTS_OpenAI_Client {
         $params['model'] = $this->model;
 
         $body = $this->build_multipart_body( $params, $boundary );
+
+        // Bump PHP execution limits to give long-running image requests a
+        // better chance of completing before the server kills the process.
+        @set_time_limit( $this->timeout * 2 );
+        @ini_set( 'max_execution_time', $this->timeout * 2 );
 
         $args = array(
             'timeout' => $this->timeout,
