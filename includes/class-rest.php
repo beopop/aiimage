@@ -44,13 +44,10 @@ class CTS_REST {
         $texture_id = isset( $params['texture_image_id'] ) ? intval( $params['texture_image_id'] ) : 0;
         $areas = isset( $params['areas'] ) ? array_map( 'sanitize_text_field', (array) $params['areas'] ) : array();
 
-        $size = isset( $params['size'] ) ? $params['size'] : 1024;
-        if ( 'base' !== $size ) {
-            $allowed_sizes = array( 256, 512, 768, 1024 );
-            $size          = intval( $size );
-            if ( ! in_array( $size, $allowed_sizes, true ) ) {
-                $size = 1024;
-            }
+        $size = isset( $params['size'] ) ? sanitize_text_field( $params['size'] ) : '1024x1024';
+        $allowed_sizes = array( '1024x1024', '1024x1536', '1536x1024', 'auto' );
+        if ( ! in_array( $size, $allowed_sizes, true ) ) {
+            $size = '1024x1024';
         }
 
         $prompt = sanitize_textarea_field( $params['prompt_overrides'] ?? '' );
