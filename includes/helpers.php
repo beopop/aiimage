@@ -5,9 +5,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 function cts_save_image_to_media_library( $binary, $base_id, $texture_id, $job_id ) {
     $upload_dir = wp_upload_dir();
-    $base_name  = pathinfo( get_attached_file( $base_id ), PATHINFO_FILENAME );
-    $filename   = sanitize_file_name( $base_name . '-texture-swap-' . current_time( 'Ymd-His' ) . '.png' );
-    $filepath   = trailingslashit( $upload_dir['path'] ) . $filename;
+    $base_name = pathinfo( get_attached_file( $base_id ), PATHINFO_FILENAME );
+    $base_dir  = trailingslashit( $upload_dir['path'] );
+    $counter   = 1;
+    do {
+        $name      = $base_name . '-' . $counter;
+        $png_path  = $base_dir . sanitize_file_name( $name . '.png' );
+        $jpg_path  = $base_dir . sanitize_file_name( $name . '.jpg' );
+        $counter++;
+    } while ( file_exists( $png_path ) || file_exists( $jpg_path ) );
+
+    $filename = basename( $png_path );
+    $filepath = $png_path;
 
     if ( ! wp_mkdir_p( $upload_dir['path'] ) ) {
         return new WP_Error( 'cts_upload_dir', __( 'Upload directory not writable', 'chair-texture-swap' ) );

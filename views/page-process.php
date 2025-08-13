@@ -29,7 +29,7 @@
         </p>
         <p>
             <label for="cts-prompt"><?php _e( 'AI Prompt', 'chair-texture-swap' ); ?></label><br>
-            <textarea id="cts-prompt" name="prompt_overrides" rows="4" cols="50"><?php echo esc_textarea( __( "Replace only the chair’s fabric upholstery with the provided texture reference.\nKeep frame, legs, lighting, shadows, composition and perspective unchanged.\nPreserve seams, stitch lines, realistic fabric behavior, and scale of the pattern.\nNo other edits besides the fabric swap.", 'chair-texture-swap' ) ); ?></textarea>
+            <textarea id="cts-prompt" name="prompt_overrides" rows="4" cols="50"><?php echo esc_textarea( __( "Replace only the chair’s fabric upholstery with the provided texture reference.\nKeep frame, legs, lighting, shadows, composition and perspective unchanged.\nPreserve seams, stitch lines, realistic fabric behavior, and scale of the pattern.\nNo other edits besides the fabric swap.\nDo not alter, add, or remove any text or letters present in the image.", 'chair-texture-swap' ) ); ?></textarea>
         </p>
         <p>
             <button type="submit" class="button button-primary"><?php _e( 'Start Processing', 'chair-texture-swap' ); ?></button>
